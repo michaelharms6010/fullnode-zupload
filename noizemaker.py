@@ -1,8 +1,5 @@
 # Nothing to see here
 
-send_zaddrs = []
-# would be cool to just grab every wallet addr with a balance
-
 zaddrs = json.loads(subprocess.check_output("zcash-cli z_getaddresses", shell=True).strip())
 
 index = 0
