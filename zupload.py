@@ -3,6 +3,7 @@
 import subprocess
 import time
 import json
+import base64
 
 def get_current_opids():
     current_opids = json.loads(subprocess.check_output("zcash-cli z_listoperationids", shell=True).strip())
@@ -36,6 +37,20 @@ def check_if_opids_done():
             return False
     return True
 
+filename = input("Enter filename >>> ")
+
+text = open(filename,"r") 
+
+input_file = text.read()
+
+input_file = base64.encodestring(input_file)
+
+chunks, chunk_size = len(input_file), 500
+memos = [ input_file[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
+
+memos.insert(0,filename + " - <blockheight> " + "- Lorem Ipsum Description" + ">]FILE]>")
+memos.append(">]EOF]>")
+
 zaddrs = json.loads(subprocess.check_output("zcash-cli z_listaddresses", shell=True).strip())
 
 index = 0
@@ -52,7 +67,7 @@ while True:
         # if fail, resend chunk, otherwise next chunk
         if opid and operation_succeeded(opid):
             count += 1
-        memo = ("This is transaction number: " + str(count)).encode("hex")
+        memo = memos[count].encode("hex")
         new_tx_command = 'zcash-cli z_sendmany "' + zaddr + '" ' + '\'[{"address": "'+ new_zaddr +'" ,"amount": 0, "memo": "' + memo + '" }]\' 1 0.00001'
         opid = subprocess.check_output(new_tx_command, shell=True).strip()
         print(opid + ", " + str(count))

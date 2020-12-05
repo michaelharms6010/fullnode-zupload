@@ -1,6 +1,7 @@
 import subprocess
 import time
 import json
+import base64 
 
 funded_zaddr = "zs1lw6n36z0nsvahtae9kzv45j5esg062pchhuwcx3s4y22fltaxpxwkamwqsafxm2le786klunr9s"
 
@@ -19,6 +20,8 @@ file = "targettext.txt"
 text = open(file,"r") 
 
 input_file = text.read()
+
+input_file = base64.encodestring(input_file)
 
 chunks, chunk_size = len(input_file), 500
 memos = [ input_file[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
@@ -46,7 +49,7 @@ while count < len(memos):
      
     new_tx_command = 'zcash-cli z_sendmany "' + funded_zaddr + '" ' + '\'[{"address": "'+ new_zaddr +'" ,"amount": 0, "memo": "' + memo_as_hex + '"}]\' 1 0.00001'
     prev_opid = opid
-    while prev_opid = opid:
+    while prev_opid == opid:
         if not opid or operation_succeeded(opid):
             opid = subprocess.check_output(new_tx_command, shell=True)
         else:
