@@ -9,7 +9,7 @@ def current_time():
     return int(time.mktime(datetime.today().timetuple()))
 start_time = current_time()
 
-vk = "zxviews1qdm7rk7tzcqqpqqk36hypakt0lgn9p2gmxt2q4jhga4ktw20rg2yw6mx3kuk6mry8fv7jzlr2mvu32eu3zyqh9gnhlkmkvz2vpysrhfma3ex845uh85c6cgdtnrsal6v0uqvuwgx94zq0dv5hytp0f7wwc3x9a3kyvhe083vgvcgqhghgwvgxdpm497zk3m94jqv3l0sdeyu25qtrqldydvq6a9htlyrtsl5my9v7s5q0pdedh7nlky9yp5lyj3grgzkpg8sjaz5qls2pqss7"
+vk = "zxviews1qdm7rk7t9gqqpqyzlksx9s8lwlmrdqhqpkpcy0xclzsy4rvzw0lz28szhv4d377uvc9rmtgdwxjsq5txmme65y0eltkmy6kjd9pp2r94lkfevyc7k6ap2w9gsdvsje57dapzumt7wf6zguh9mkwnj9y3l0megcyhez4ezer8h47aup2ad57w7fty2umr26s6hp32wu5paka0ms5rwjma7wk7wwkwk8svwpfwm58czhd535tdt776ce5mfns4t5gweem6h252a3cfmls07ha4p"
 
 
 def get_transactions_for_address(zaddr):
@@ -17,6 +17,7 @@ def get_transactions_for_address(zaddr):
     get_transactions_command = 'zcash-cli z_listreceivedbyaddress "' + zaddr + '"'
     transactions = json.loads(subprocess.check_output(get_transactions_command, shell=True).strip())
     print(transactions)
+    transactions = sorted(transactions, key = lambda tx: int(tx["memo"].decode("hex").split("--:--")[0]))
     # should these transactions be explicitly storted by created_time?
     return transactions
 
@@ -29,24 +30,26 @@ def fetch_file(view_key, rescan_height=1066000):
         # save ile
     # import_view_key(view_key, rescan_height)
     
-    transactions = get_transactions_for_address("zs179k8pwql9q e2k2r8fy0ur56 j3e02dqnzndq6 47wc9xh3kvn5c 5nc688jqz92ua vj073zzvef2yc")
-    metadata = transactions.pop(0)['memo'].decode("hex")
+    transactions = get_transactions_for_address("zs14stmn89xqa ht86hlkc5e76e en3lxqtptmefg qehygrga6447x mfreku5z0vkxz cfh23syyamvrs")
+    metadata = transactions.pop(0)['memo'].decode("hex").split("--:--")[1]
     print(metadata)
     filename = metadata.split(" ")[0]
     file_as_base64 = ""
     eof = False
     for tx in transactions:
         if not eof:
-            memo = tx['memo'].decode("hex")
+            memo = tx['memo'].decode("hex").split("--:--")[1].replace(" ", "").replace("\n", "")
             file_as_base64 += memo
         if ">]EOF]>" in memo:
             eof = True
         print(memo)
+
+    print file_as_base64
     
-    memo = memo.replace(">]EOF]>", "")
+    file_as_base64 = file_as_base64.replace(">]EOF]>", "")
 
     with open(filename, "wb") as f:
-        f.write(memo.decode("base64"))
+        f.write(file_as_base64.decode("base64"))
 
 
 
