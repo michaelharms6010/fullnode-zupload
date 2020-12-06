@@ -4,6 +4,13 @@ import subprocess
 import time
 import json
 import base64
+import time
+from datetime import datetime
+
+def current_time():
+    return int(time.mktime(datetime.today().timetuple()))
+
+
 
 def get_new_zaddr_pair():
     new_zaddr = subprocess.check_output("zcash-cli z_getnewaddress", shell=True).strip()
@@ -65,7 +72,7 @@ view_key = zaddr_pair[1]
 
 count = 0
 opid = None
-
+start_time = current_time()
 print("BEGINNING UPLOAD ***** --> ", filename)
 print("View Key:", view_key)
 
@@ -82,11 +89,13 @@ while count < len(memos):
             new_tx_command = 'zcash-cli z_sendmany "' + zaddr + '" ' + '\'[{"address": "'+ new_zaddr +'" ,"amount": 0, "memo": "' + memo + '" }]\' 1 0.00001'
             opid = subprocess.check_output(new_tx_command, shell=True).strip()
             print(opid + ", " + str(count+1) + " of " + str(len(memos)+1))
+            print("Time elapsed: " + str(current_time() - start_time) + "s")
     time.sleep(5)
     index  = (index + 1) % len(zaddrs)
 
 
 print(filename)
 print("Upload is complete and waiting on final confirmation.")
+print("upload time: " + str(current_time() - start_time) + "s" )
 
 print("View Key:", view_key)

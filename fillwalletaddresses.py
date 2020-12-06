@@ -18,7 +18,7 @@ for i in range(len(zaddrs)):
     balance = float(subprocess.check_output("zcash-cli z_getbalance \"" + zaddr + "\"", shell=True).strip())
     if balance >= 0.001:
         for tx in recipients:
-            tx["amount"] = balance / float(zaddrs.length)
+            tx["amount"] = round(balance / float(len(zaddrs)),8)
         new_tx_command = 'zcash-cli z_sendmany "' + zaddr + '" \'' + json.dumps(recipients) + '\' 1 0.00001'
         opid = subprocess.check_output(new_tx_command, shell=True).strip()
         print(opid)
