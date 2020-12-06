@@ -5,6 +5,12 @@ import time
 import json
 import base64
 
+def get_new_zaddr_pair():
+    new_zaddr = subprocess.check_output("zcash-cli z_getnewaddress", shell=True).strip()
+    bash_command = 'zcash-cli z_exportviewingkey "' + new_zaddr + '"'
+    view_key = subprocess.check_output(bash_command, shell=True)
+    return [new_zaddr, view_key]
+
 def get_current_opids():
     current_opids = json.loads(subprocess.check_output("zcash-cli z_listoperationids", shell=True).strip())
     return current_opids
@@ -43,23 +49,27 @@ text = open(filename,"r")
 
 input_file = text.read()
 
-input_file = base64.encodestring(input_file)
+input_file = base64.encodestring(input_file).strip() + ">]EOF]>\n"
 
 chunks, chunk_size = len(input_file), 500
 memos = [ input_file[i:i+chunk_size] for i in range(0, chunks, chunk_size) ]
 
 memos.insert(0,filename + " - <blockheight> " + "- Lorem Ipsum Description" + ">]FILE]>")
-memos.append(">]EOF]>")
 
 zaddrs = json.loads(subprocess.check_output("zcash-cli z_listaddresses", shell=True).strip())
 
 index = 0
-new_zaddr = "zs19zv8gmrc8uwa06xpc4dxehnu4vsfthndvu5xemqllwppgg36tvfmgje80990fpzc55jgs08ndmp"
+zaddr_pair = get_new_zaddr_pair()
+new_zaddr = zaddr_pair[0]
+view_key = zaddr_pair[1]
 
 count = 0
 opid = None
 
-while True:
+print("BEGINNING UPLOAD ***** --> ", filename)
+print("View Key:", view_key)
+
+while count < len(memos):
     zaddr = zaddrs[index]
     balance = float(subprocess.check_output("zcash-cli z_getbalance \"" + zaddr + "\"", shell=True).strip())
     current_opids = json.loads(subprocess.check_output("zcash-cli z_listoperationids", shell=True).strip())
@@ -67,9 +77,16 @@ while True:
         # if fail, resend chunk, otherwise next chunk
         if opid and operation_succeeded(opid):
             count += 1
-        memo = memos[count].encode("hex")
-        new_tx_command = 'zcash-cli z_sendmany "' + zaddr + '" ' + '\'[{"address": "'+ new_zaddr +'" ,"amount": 0, "memo": "' + memo + '" }]\' 1 0.00001'
-        opid = subprocess.check_output(new_tx_command, shell=True).strip()
-        print(opid + ", " + str(count))
+        if count < len(memos):
+            memo = memos[count].encode("hex")
+            new_tx_command = 'zcash-cli z_sendmany "' + zaddr + '" ' + '\'[{"address": "'+ new_zaddr +'" ,"amount": 0, "memo": "' + memo + '" }]\' 1 0.00001'
+            opid = subprocess.check_output(new_tx_command, shell=True).strip()
+            print(opid + ", " + str(count+1) + " of " + str(len(memos)+1))
     time.sleep(5)
     index  = (index + 1) % len(zaddrs)
+
+
+print(filename)
+print("Upload is complete and waiting on final confirmation.")
+
+print("View Key:", view_key)
